@@ -17,7 +17,7 @@ export default function DefeatEffects({ isWinner, playerName }: DefeatEffectsPro
     if (!isWinner) {
       // Initialize audio if not already created
       if (!audioRef.current) {
-        audioRef.current = new Audio("/sounds/defeat.mp3");
+        audioRef.current = new Audio("/caro/sounds/defeat.mp3");
         audioRef.current.volume = 0.5;
       }
 

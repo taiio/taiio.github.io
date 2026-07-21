@@ -39,7 +39,7 @@ export default function VictoryEffects({ isWinner, playerName }: VictoryEffectsP
     const setupEffects = async () => {
       if (isWinner) {
         if (!audioRef.current) {
-          audioRef.current = new Audio("/sounds/victory.mp3")
+          audioRef.current = new Audio("/caro/sounds/victory.mp3")
           audioRef.current.volume = 0.5
         }
 

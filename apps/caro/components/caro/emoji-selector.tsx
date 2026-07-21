@@ -9,35 +9,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export const EMOJIS = [
   {
     name: "1",
-    url: "/emojis/1.gif",
+    url: "/caro/emojis/1.gif",
   },
   {
     name: "2",
-    url: "/emojis/2.gif",
+    url: "/caro/emojis/2.gif",
   },
   {
-    name: "512",
-    url: "/emojis/512.gif",
-  },
-  {
-    name: "grinning-face",
-    url: "/emojis/grinning-face.gif",
+    name: "3",
+    url: "/caro/emojis/3.gif",
   },
   {
     name: "face-with-tears-of-joy",
-    url: "/emojis/face-with-tears-of-joy.gif",
-  },
-  {
-    name: "smiling-face-with-heart-eyes",
-    url: "/emojis/smiling-face-with-heart-eyes.gif",
-  },
-  {
-    name: "thinking-face",
-    url: "/emojis/thinking-face.gif",
-  },
-  {
-    name: "thumbs-up",
-    url: "/emojis/thumbs-up.gif",
+    url: "/caro/emojis/face-with-tears-of-joy.gif",
   },
 ]
 
