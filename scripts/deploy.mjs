@@ -49,7 +49,18 @@ async function main() {
   });
 
   if (commitResult.status === 0) {
-    run("git", ["push", "origin", BRANCH], { cwd: worktreeDir });
+    run("git", [
+      "remote",
+      "add",
+      "deploy",
+      "git@github.com:taiio/taiio.github.io.git",
+    ], {
+      cwd: worktreeDir,
+    });
+
+    run("git", ["push", "deploy", BRANCH], {
+      cwd: worktreeDir,
+    });
     console.log(`\n✔ Deployed to ${BRANCH}.`);
   } else {
     console.log("\nNothing to commit — dist/ is unchanged since the last deploy.");
