@@ -1,0 +1,10 @@
+{
+  "name": "Flight Tool",
+  "slug": "flight-tool",
+  "description": "Real-time flight tracking and route planning dashboard.",
+  "tags": ["Aviation", "React", "Maps"],
+  "featured": true,
+  "priority": 2,
+  "icon": "icon.png",
+  "status": "live"
+}

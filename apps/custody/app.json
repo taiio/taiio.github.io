@@ -1,0 +1,10 @@
+{
+  "name": "Custody Architecture",
+  "slug": "custody",
+  "description": "Multichain crypto custody platform with signing policy engine and audit trail.",
+  "tags": ["Crypto", "NodeJS", "PostgreSQL"],
+  "featured": true,
+  "priority": 1,
+  "icon": "icon.png",
+  "status": "live"
+}
