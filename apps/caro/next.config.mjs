@@ -13,6 +13,7 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   // Reusable base-path strategy (same convention as apps/*/vite.config.ts):
   // the monorepo build pipeline sets NEXT_BASE_PATH to "/caro" for this app;
   // when run completely standalone (`cd apps/caro && npm run dev`), it falls
@@ -22,7 +23,7 @@ const nextConfig = {
   assetPrefix: process.env.NEXT_BASE_PATH || "/caro",
   trailingSlash: true,
   eslint: {
-    ignoreDuringBuilds: true,
+    // ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
