@@ -8,9 +8,16 @@ const BRANCH = process.env.DEPLOY_BRANCH ?? "gh-pages";
 
 function run(command, args, options = {}) {
   console.log(`$ ${command} ${args.join(" ")}`);
-  const result = spawnSync(command, args, { stdio: "inherit", ...options });
+
+  const result = spawnSync(command, args, {
+    stdio: "inherit",
+    ...options,
+  });
+
   if (result.status !== 0) {
-    throw new Error(`Command failed: ${command} ${args.join(" ")}`);
+    throw new Error(
+      `Command failed: ${command} ${args.join(" ")}`
+    );
   }
 }
 
@@ -20,53 +27,126 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Deploying dist/ to the "${BRANCH}" branch via git worktree...`);
+  console.log(
+    `Deploying dist/ to the "${BRANCH}" branch via git worktree...`
+  );
 
-  // Uses a throwaway git worktree so we never touch the developer's working
-  // directory or currently checked-out branch.
   const worktreeDir = path.join(ROOT, ".deploy-worktree");
+
+  // Cleanup broken metadata from previous runs.
   await fs.remove(worktreeDir);
 
   try {
-    run("git", ["fetch", "origin", BRANCH], { cwd: ROOT });
+    run("git", ["worktree", "prune"], {
+      cwd: ROOT,
+    });
+  } catch {}
+
+  try {
+    run("git", ["fetch", "origin", BRANCH], {
+      cwd: ROOT,
+    });
   } catch {
-    console.log(`No existing "${BRANCH}" branch on origin yet — will create it.`);
+    console.log(
+      `No existing "${BRANCH}" branch on origin yet — will create it.`
+    );
   }
 
   try {
-    run("git", ["worktree", "add", "-B", BRANCH, worktreeDir, `origin/${BRANCH}`], { cwd: ROOT });
+    run(
+      "git",
+      [
+        "worktree",
+        "add",
+        "-B",
+        BRANCH,
+        worktreeDir,
+        `origin/${BRANCH}`,
+      ],
+      { cwd: ROOT }
+    );
   } catch {
-    run("git", ["worktree", "add", "-B", BRANCH, worktreeDir], { cwd: ROOT });
+    run(
+      "git",
+      ["worktree", "add", "-B", BRANCH, worktreeDir],
+      { cwd: ROOT }
+    );
   }
 
-  await fs.emptyDir(worktreeDir);
+  // IMPORTANT:
+  // Do NOT use emptyDir() because it removes .git.
+  for (const file of await fs.readdir(worktreeDir)) {
+    if (file === ".git") continue;
+
+    await fs.remove(path.join(worktreeDir, file));
+  }
+
   await fs.copy(DIST, worktreeDir);
 
-  run("git", ["add", "-A"], { cwd: worktreeDir });
-  const commitResult = spawnSync("git", ["commit", "-m", `feat: ${new Date().toISOString()}`], {
+  run("git", ["add", "-A"], {
     cwd: worktreeDir,
-    stdio: "inherit",
   });
 
-  if (commitResult.status === 0) {
-    run("git", [
-      "remote",
-      "add",
-      "deploy",
-      "git@github.com:taiio/taiio.github.io.git",
-    ], {
+  const commitResult = spawnSync(
+    "git",
+    [
+      "commit",
+      "-m",
+      `chore(deploy): ${new Date().toISOString()}`,
+    ],
+    {
       cwd: worktreeDir,
-    });
+      stdio: "inherit",
+    }
+  );
 
-    run("git", ["push", "deploy", BRANCH], {
-      cwd: worktreeDir,
-    });
+  if (commitResult.status === 0) {
+    const remotes = spawnSync(
+      "git",
+      ["remote"],
+      {
+        cwd: worktreeDir,
+        encoding: "utf8",
+      }
+    );
+
+    if (!remotes.stdout.includes("deploy")) {
+      run(
+        "git",
+        [
+          "remote",
+          "add",
+          "deploy",
+          "git@github.com:taiio/taiio.github.io.git",
+        ],
+        {
+          cwd: worktreeDir,
+        }
+      );
+    }
+
+    run(
+      "git",
+      ["push", "-u", "--force", "deploy", BRANCH],
+      {
+        cwd: worktreeDir,
+      }
+    );
+
     console.log(`\n✔ Deployed to ${BRANCH}.`);
   } else {
-    console.log("\nNothing to commit — dist/ is unchanged since the last deploy.");
+    console.log(
+      "\nNothing to commit — dist/ is unchanged since the last deploy."
+    );
   }
 
-  run("git", ["worktree", "remove", "--force", worktreeDir], { cwd: ROOT });
+  run(
+    "git",
+    ["worktree", "remove", "--force", worktreeDir],
+    {
+      cwd: ROOT,
+    }
+  );
 }
 
 main().catch((err) => {
