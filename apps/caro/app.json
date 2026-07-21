@@ -1,0 +1,10 @@
+{
+  "name": "Caro Online",
+  "slug": "caro",
+  "description": "Realtime multiplayer Gomoku/Caro with emoji reactions, sound effects, and victory animations.",
+  "tags": ["Game", "Next.js", "Firebase", "Realtime"],
+  "featured": true,
+  "priority": 3,
+  "icon": "public/favicon.ico",
+  "status": "live"
+}

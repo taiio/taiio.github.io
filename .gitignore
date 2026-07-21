@@ -10,5 +10,3 @@ coverage
 *.tsbuildinfo
 .vite
 tsconfig.tsbuildinfo
-
-/.next

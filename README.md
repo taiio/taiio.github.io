@@ -14,6 +14,8 @@ https://username.github.io/flight-tool    → independent app
 - **Each app is a real, independent project.** `apps/custody` and `apps/flight-tool` each have
   their own `package.json`, `vite.config.ts`, `tsconfig.json`, and dependency tree. You can
   `cd apps/custody && npm install && npm run dev` with zero knowledge of the rest of the repo.
+  `apps/caro` is even a completely different framework (Next.js, statically exported) — the
+  monorepo doesn't care what an app is built with, only that it produces its own `dist/`.
 - **Zero hardcoded project list.** The portfolio discovers apps by scanning `apps/*/app.json`
   with `import.meta.glob` in the browser (`src/lib/registry.ts`) and with `fast-glob` on the
   Node build side (`scripts/lib/apps.mjs`). Adding an app means adding a folder — nothing in the
@@ -124,4 +126,3 @@ branch via a throwaway git worktree).
 - Terminal Mode (`help`, `apps`, `open <slug>`, `whoami`, `clear`)
 - Live search + filter-by-tag across all discovered applications
 - Minimal offline support via a service worker caching the portfolio shell (PWA manifest included)
-# portfolio

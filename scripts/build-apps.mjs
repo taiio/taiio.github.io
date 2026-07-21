@@ -17,7 +17,7 @@ for (const app of apps) {
   const result = spawnSync("pnpm", ["run", "build"], {
     cwd: app.dir,
     stdio: "inherit",
-    env: { ...process.env, VITE_BASE_PATH: basePath },
+    env: { ...process.env, VITE_BASE_PATH: basePath, NEXT_BASE_PATH: basePath.replace(/\/$/, "") },
     shell: process.platform === "win32",
   });
 
