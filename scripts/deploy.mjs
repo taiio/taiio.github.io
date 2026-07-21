@@ -43,7 +43,7 @@ async function main() {
   await fs.copy(DIST, worktreeDir);
 
   run("git", ["add", "-A"], { cwd: worktreeDir });
-  const commitResult = spawnSync("git", ["commit", "-m", `deploy: ${new Date().toISOString()}`], {
+  const commitResult = spawnSync("git", ["commit", "-m", `feat: ${new Date().toISOString()}`], {
     cwd: worktreeDir,
     stdio: "inherit",
   });
