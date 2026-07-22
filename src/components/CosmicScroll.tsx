@@ -139,6 +139,40 @@ function makeHelix(): ShapeData {
 const SHAPES: ShapeData[] = [makeGalaxy(), makeRing(), makeBurst(), makeHelix(), makeGalaxy()];
 const SEGMENTS = SHAPES.length - 1;
 
+/**
+ * Wheel-to-zoom is only active while the cursor sits inside this region,
+ * expressed as ratios of the viewport so it scales with any screen size.
+ * Everywhere outside it, the mouse wheel must fall through to normal page
+ * scrolling instead of zooming the 3D scene.
+ */
+const ZOOM_AREA = {
+  centerXRatio: 0.5,
+  centerYRatio: 0.5,
+  widthRatio: 0.3,
+  heightRatio: 0.3,
+};
+
+/**
+ * Tests viewport-relative coordinates (as reported by PointerEvent.clientX/Y)
+ * against the configurable ZOOM_AREA region centered in the viewport.
+ */
+function isCursorInsideZoomArea(clientX: number, clientY: number): boolean {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  const areaWidth = viewportWidth * ZOOM_AREA.widthRatio;
+  const areaHeight = viewportHeight * ZOOM_AREA.heightRatio;
+  const centerX = viewportWidth * ZOOM_AREA.centerXRatio;
+  const centerY = viewportHeight * ZOOM_AREA.centerYRatio;
+
+  const left = centerX - areaWidth / 2;
+  const right = centerX + areaWidth / 2;
+  const top = centerY - areaHeight / 2;
+  const bottom = centerY + areaHeight / 2;
+
+  return clientX >= left && clientX <= right && clientY >= top && clientY <= bottom;
+}
+
 function smoothstep(t: number) {
   return t * t * (3 - 2 * t);
 }
@@ -160,7 +194,7 @@ export function CosmicScroll() {
       0.1,
       200,
     );
-    camera.position.set(0, 2.6, 9);
+    camera.position.set(0, 2.6, 15);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -214,6 +248,23 @@ export function CosmicScroll() {
     controls.autoRotateSpeed = 0.35;
     controls.minDistance = 2.5;
     controls.maxDistance = 40;
+
+    // Wheel-to-zoom is only meant to fire inside the ZOOM_AREA region (see
+    // isCursorInsideZoomArea above). Rather than intercepting the wheel
+    // event ourselves, we just toggle OrbitControls' own `enableZoom` flag:
+    // its internal wheel handler bails out (without calling preventDefault)
+    // whenever enableZoom is false, so the event passes straight through to
+    // the browser's normal scroll behavior outside the region. Pan and
+    // rotate are untouched by this and keep working everywhere, as before.
+    // Starts false (i.e. "outside") until the first pointermove tells us
+    // otherwise, so a stray wheel event before any mouse movement never
+    // hijacks the page scroll.
+    controls.enableZoom = false;
+
+    function handlePointerMove(event: PointerEvent) {
+      controls.enableZoom = isCursorInsideZoomArea(event.clientX, event.clientY);
+    }
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
 
     let frameId: number;
     const clock = new THREE.Clock();
@@ -281,6 +332,7 @@ export function CosmicScroll() {
       cancelAnimationFrame(frameId);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("pointermove", handlePointerMove);
       controls.dispose();
       renderer.dispose();
       geometry.dispose();
