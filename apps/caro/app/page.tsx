@@ -10,7 +10,7 @@ import { GameCreation } from "@/components/caro/game-creation"
 import { GameStatus } from "@/components/caro/game-status"
 import { Loader2 } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
-import { Copy } from "lucide-react"
+import { Copy, Check } from "lucide-react"
 import EmojiSelector from "@/components/caro/emoji-selector"
 import EmojiDisplay from "@/components/caro/emoji-display"
 import VictoryEffects from "@/components/caro/victory-effects"
@@ -20,6 +20,7 @@ export default function CaroGame() {
   const [isMounted, setIsMounted] = useState(false)
   const game = useCaroGame()
   const [showDefeat, setShowDefeat] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   // Hiển thị hiệu ứng thua cuộc
   useEffect(() => {
@@ -47,6 +48,10 @@ export default function CaroGame() {
       </div>
     )
   }
+  const handleCopyRoomId = async () => {
+    game.copyRoomId();
+    setCopied(true);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -86,8 +91,25 @@ export default function CaroGame() {
             <div className="mt-4 p-3 rounded-md">
               <div className="flex items-center justify-between">
                 <span className="font-medium">Room Code: {game.roomId}</span>
-                <Button variant="outline" size="icon" onClick={game.copyRoomId} title="Copy Room Code">
-                  <Copy className="h-4 w-4" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleCopyRoomId}
+                  title={copied ? "Copied!" : "Copy Room Code"}
+                >
+                  <Copy
+                    className={`absolute transition-all duration-300 ${copied
+                        ? "-rotate-90 scale-50 opacity-0"
+                        : "rotate-0 scale-100 opacity-100"
+                      }`}
+                  />
+
+                  <Check
+                    className={`absolute text-green-500 transition-all duration-300 ${copied
+                        ? "rotate-0 scale-100 opacity-100"
+                        : "rotate-90 scale-50 opacity-0"
+                      }`}
+                  />
                 </Button>
               </div>
               <p className="text-sm text-gray-500 mt-1">Share this code with your friend to join the game</p>
@@ -150,8 +172,8 @@ export default function CaroGame() {
         </div>
       )}
       {game.gameState === "playing" && <div className="w-full max-w-lg mx-auto p-6 space-y-4">
-        <hr/>
-        <br/>
+        <hr />
+        <br />
         <Label className="block mb-2">The game rules that apply in this room are:
         </Label>
         <div className="space-y-2">
