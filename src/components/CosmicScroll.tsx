@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
@@ -139,6 +139,89 @@ function makeHelix(): ShapeData {
 const SHAPES: ShapeData[] = [makeGalaxy(), makeRing(), makeBurst(), makeHelix(), makeGalaxy()];
 const SEGMENTS = SHAPES.length - 1;
 
+/**
+ * Wheel-to-zoom (desktop mouse) is only active while the cursor sits
+ * inside this region, expressed as ratios of the viewport so it scales
+ * with any screen size. Everywhere outside it, the mouse wheel must fall
+ * through to normal page scrolling instead of zooming the 3D scene.
+ *
+ * On touch devices, this same region is reused as the only area where
+ * OrbitControls receives touches at all (see IS_TOUCH_DEVICE and the
+ * passthrough strips below) - outside of it, touch gestures reach the
+ * page directly instead of the 3D scene.
+ */
+const ZOOM_AREA = {
+  centerXRatio: 0.5,
+  centerYRatio: 0.5,
+  widthRatio: 0.3,
+  heightRatio: 0.3,
+};
+
+/**
+ * Tests viewport-relative coordinates (as reported by PointerEvent.clientX/Y)
+ * against the configurable ZOOM_AREA region centered in the viewport.
+ */
+function isCursorInsideZoomArea(clientX: number, clientY: number): boolean {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  const areaWidth = viewportWidth * ZOOM_AREA.widthRatio;
+  const areaHeight = viewportHeight * ZOOM_AREA.heightRatio;
+  const centerX = viewportWidth * ZOOM_AREA.centerXRatio;
+  const centerY = viewportHeight * ZOOM_AREA.centerYRatio;
+
+  const left = centerX - areaWidth / 2;
+  const right = centerX + areaWidth / 2;
+  const top = centerY - areaHeight / 2;
+  const bottom = centerY + areaHeight / 2;
+
+  return clientX >= left && clientX <= right && clientY >= top && clientY <= bottom;
+}
+
+/** ZOOM_AREA expressed as percentage edges (0-100), for laying out the
+ *  touch passthrough strips below. Computed once at module load since
+ *  ZOOM_AREA is a fixed constant. */
+const ZOOM_AREA_EDGES = {
+  left: (ZOOM_AREA.centerXRatio - ZOOM_AREA.widthRatio / 2) * 100,
+  right: (ZOOM_AREA.centerXRatio + ZOOM_AREA.widthRatio / 2) * 100,
+  top: (ZOOM_AREA.centerYRatio - ZOOM_AREA.heightRatio / 2) * 100,
+  bottom: (ZOOM_AREA.centerYRatio + ZOOM_AREA.heightRatio / 2) * 100,
+};
+
+/**
+ * OrbitControls sets `domElement.style.touchAction = "none"` on its own
+ * canvas, which tells the browser to never handle touch scrolling there
+ * natively - regardless of any enableZoom/enableRotate/enablePan flag. So
+ * on touch devices, gating those flags alone (as we do for desktop mouse
+ * wheel below) cannot restore native scrolling; the canvas has to
+ * physically not be the touch target outside the activation area.
+ *
+ * We solve this by rendering four transparent, touch-action:"pan-y"
+ * strips that tile everywhere OUTSIDE the ZOOM_AREA region, stacked above
+ * the canvas (see the JSX below). A touch starting on a strip lands on
+ * that strip, not the canvas, so OrbitControls never sees it and the
+ * browser scrolls the page normally. A touch starting inside the
+ * uncovered center region lands directly on the canvas and OrbitControls
+ * handles it exactly as it always has (rotate/pan/pinch-zoom, untouched).
+ *
+ * This only applies on touch-capable devices: computed once at module
+ * load (touch capability doesn't change mid-session), so desktop never
+ * renders these strips and keeps its full-viewport mouse-drag rotate/pan
+ * exactly as before.
+ */
+const IS_TOUCH_DEVICE =
+  typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+
+function passthroughStripStyle(rect: CSSProperties): CSSProperties {
+  return {
+    position: "absolute",
+    zIndex: 1,
+    touchAction: "pan-y",
+    pointerEvents: "auto",
+    ...rect,
+  };
+}
+
 function smoothstep(t: number) {
   return t * t * (3 - 2 * t);
 }
@@ -215,6 +298,28 @@ export function CosmicScroll() {
     controls.minDistance = 2.5;
     controls.maxDistance = 40;
 
+    // Wheel-to-zoom is only meant to fire inside the ZOOM_AREA region (see
+    // isCursorInsideZoomArea above). Rather than intercepting the wheel
+    // event ourselves, we just toggle OrbitControls' own `enableZoom` flag:
+    // its internal wheel handler bails out (without calling preventDefault)
+    // whenever enableZoom is false, so the event passes straight through to
+    // the browser's normal scroll behavior outside the region. Pan and
+    // rotate are untouched by this and keep working everywhere, as before.
+    //
+    // This is desktop-only (mouse wheel). Touch devices are handled by the
+    // passthrough strips instead (see IS_TOUCH_DEVICE above and the JSX
+    // below) and must keep enableZoom at its library default (true) so
+    // pinch-to-zoom keeps working inside the activation area.
+    if (!IS_TOUCH_DEVICE) {
+      controls.enableZoom = false;
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      if (IS_TOUCH_DEVICE || event.pointerType !== "mouse") return;
+      controls.enableZoom = isCursorInsideZoomArea(event.clientX, event.clientY);
+    }
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+
     let frameId: number;
     const clock = new THREE.Clock();
 
@@ -281,6 +386,7 @@ export function CosmicScroll() {
       cancelAnimationFrame(frameId);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("pointermove", handlePointerMove);
       controls.dispose();
       renderer.dispose();
       geometry.dispose();
@@ -303,7 +409,48 @@ export function CosmicScroll() {
           overflow: "hidden",
           cursor: "grab",
         }}
-      />
+      >
+        {IS_TOUCH_DEVICE && (
+          <>
+            {/* top strip */}
+            <div
+              style={passthroughStripStyle({
+                top: 0,
+                left: 0,
+                right: 0,
+                height: `${ZOOM_AREA_EDGES.top}%`,
+              })}
+            />
+            {/* bottom strip */}
+            <div
+              style={passthroughStripStyle({
+                top: `${ZOOM_AREA_EDGES.bottom}%`,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              })}
+            />
+            {/* left strip */}
+            <div
+              style={passthroughStripStyle({
+                top: `${ZOOM_AREA_EDGES.top}%`,
+                left: 0,
+                width: `${ZOOM_AREA_EDGES.left}%`,
+                height: `${ZOOM_AREA_EDGES.bottom - ZOOM_AREA_EDGES.top}%`,
+              })}
+            />
+            {/* right strip */}
+            <div
+              style={passthroughStripStyle({
+                top: `${ZOOM_AREA_EDGES.top}%`,
+                left: `${ZOOM_AREA_EDGES.right}%`,
+                right: 0,
+                height: `${ZOOM_AREA_EDGES.bottom - ZOOM_AREA_EDGES.top}%`,
+              })}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }

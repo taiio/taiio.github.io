@@ -117,7 +117,7 @@ export function GalaxyBackground() {
       0.1,
       200,
     );
-    camera.position.set(0, 3.2, 8);
+    camera.position.set(0, 3.2, 15);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
