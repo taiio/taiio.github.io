@@ -33,7 +33,6 @@ export function useGameTimer(
   }
   // Hàm randomMove
   const makeRandomMove = () => {
-    console.log("Making random move for player:", myPlayerId);
     const rows = board.length;
     const cols = board[0].length;
     let attempts = rows * cols;
@@ -88,7 +87,6 @@ export function useGameTimer(
       if (isMyTurn && typeof makeMove === 'function') {
         makeRandomMove()
       }
-      console.log('Không còn ô trống để đánh.');
     }
   }, [displayTimer]);
 

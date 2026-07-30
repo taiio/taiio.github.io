@@ -7,12 +7,12 @@ import type { GameRule, GameState } from "@/types/game-types"
 
 // Debug logging function
 const logDebug = (message: string, data: any = null) => {
-  const timestamp = new Date().toISOString()
-  if (data) {
-    console.log(`[${timestamp}] ${message}`, data)
-  } else {
-    console.log(`[${timestamp}] ${message}`)
-  }
+  // const timestamp = new Date().toISOString()
+  // if (data) {
+  //   console.debug(`[${timestamp}] ${message}`, data)
+  // } else {
+  //   console.debug(`[${timestamp}] ${message}`)
+  // }
 }
 
 export function useGameConnection() {

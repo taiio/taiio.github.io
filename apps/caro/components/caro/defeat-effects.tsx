@@ -38,7 +38,7 @@ export default function DefeatEffects({ isWinner, playerName }: DefeatEffectsPro
 
       // Display defeat emoji
       if (emojiRef.current) {
-        emojiRef.current.src = "/emojis/face-with-tears-of-joy.gif";
+        emojiRef.current.src = "/caro/emojis/face-with-tears-of-joy.gif";
       }
 
       // Stop audio after 8 seconds

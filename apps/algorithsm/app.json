@@ -1,0 +1,10 @@
+{
+  "name": "Algorithms Visualizer",
+  "slug": "algorithsm",
+  "description": "Interactive visualizations for algorithmic concepts.",
+  "tags": ["Algorithms", "React", "Visualization"],
+  "featured": true,
+  "priority": 2,
+  "icon": "icon.png",
+  "status": "live"
+}

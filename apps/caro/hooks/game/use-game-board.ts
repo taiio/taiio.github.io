@@ -28,7 +28,6 @@ export function useGameBoard() {
       const newBoard = JSON.parse(JSON.stringify(board))
       newBoard[row][col] = playerId // Store player ID instead of symbol
       setBoard(newBoard)
-      console.log("Move made by", playerId, "at", row, col)
       // Switch player
       const nextPlayerId = playerId === "host" ? "guest" : "host" // Toggle between host and guest
       setCurrentPlayerId(nextPlayerId)

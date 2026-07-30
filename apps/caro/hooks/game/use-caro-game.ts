@@ -135,7 +135,6 @@ export function useCaroGame() {
     }
     // Gọi hàm makeMove từ hook useGameBoard
     const result = makeMove(row, col, playerId, sendMove)
-    console.log("handleMakeMove", row, col, playerId, sendMove, result)
     // Lưu lại nước đi cuối
     setLastMove({ row, col })
 
@@ -474,7 +473,6 @@ export function useCaroGame() {
     const handleMessage = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data)
-        console.log("Received data channel message:", data)
         if (data.type !== 'ping') {
           setTurnTimerFactory()
         }
@@ -563,7 +561,7 @@ export function useCaroGame() {
             }
             break
           default:
-            console.log("Unknown message type:", data.type)
+            break
         }
       } catch (err) {
         console.error("Error processing message:", err, event.data)
