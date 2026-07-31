@@ -62,8 +62,8 @@ export class SceneManager {
     this.controls.minDistance = 20;
     this.controls.maxDistance = 400;
 
-    const ambient = new THREE.AmbientLight(0x5a6b85, 0.38);
-    const key = new THREE.DirectionalLight(0x7f9bc9, 0.4);
+    const ambient = new THREE.AmbientLight(0x8a8f96, 0.4);
+    const key = new THREE.DirectionalLight(0x9aa3b0, 0.42);
     key.position.set(80, 120, 60);
     const rim = new THREE.PointLight(0xb45cff, 0.3, 500);
     rim.position.set(-100, -60, -80);
@@ -198,6 +198,11 @@ export class SceneManager {
           clearTimeout(this.exploreTimers.get(edgeId));
           this.exploreTimers.delete(edgeId);
         }
+        if (!mesh.userData.solid) {
+          mesh.userData.solid = true;
+          mesh.material.dashSize = 200;
+          mesh.material.gapSize = 0;
+        }
       } else if (!mesh.userData.permanentlyRevealed) {
         mesh.userData.exploreOnly = true;
       }
@@ -295,15 +300,19 @@ export class SceneManager {
     for (const e of graph.edges.values()) {
       const a = graph.nodes.get(e.a).position;
       const b = graph.nodes.get(e.b).position;
-      const curve = new THREE.LineCurve3(a, b);
-      const geo = new THREE.TubeGeometry(curve, 8, 0.16, 6, false);
-      const mat = new THREE.MeshStandardMaterial({
-        color: COLORS.edgeIdle, map: this._makeGradientTexture(),
-        emissive: COLORS.edgeIdle, emissiveIntensity: 0.12,
-        transparent: true, opacity: 0, roughness: 0.6, metalness: 0.05,
+      const geo = new THREE.BufferGeometry().setFromPoints([a, b]);
+      const mat = new THREE.LineDashedMaterial({
+        color: COLORS.edgeIdle,
+        transparent: false,
+        opacity: 0.1,
+        dashSize: 1.4,
+        gapSize: 1.6,
+        linewidth: 1, // most WebGL implementations clamp this to 1px regardless — which is exactly the "thin as thread" look we want, unaffected by zoom
       });
-      const mesh = new THREE.Mesh(geo, mat);
+      const mesh = new THREE.Line(geo, mat);
+      mesh.computeLineDistances(); // required for the dash pattern to render
       mesh.userData.revealTarget = 0; // hidden until relaxed by the algorithm or clicked into view
+      mesh.userData.solid = false;
       this.graphGroup.add(mesh);
       this.edgeMeshes.set(e.id, mesh);
 
@@ -496,7 +505,7 @@ export class SceneManager {
     const mesh = this.edgeMeshes.get(edgeId);
     if (!mesh) return;
     const fromColor = mesh.material.color.clone();
-    const toColor = new THREE.Color(colorHex);
+    const toColor = new THREE.Color(colorHex).multiplyScalar(1 + emissive); // lines are unlit — brightness alone carries the "glow" and trips bloom
     const start = performance.now();
     const token = {};
     this.edgeState.set(edgeId, token);
@@ -504,12 +513,10 @@ export class SceneManager {
       if (this.edgeState.get(edgeId) !== token) return;
       const t = clamp01((performance.now() - start) / duration);
       mesh.material.color.copy(fromColor).lerp(toColor, t);
-      mesh.material.emissive.copy(fromColor).lerp(toColor, t);
-      mesh.material.emissiveIntensity = lerp(mesh.material.emissiveIntensity, emissive, t);
       if (t < 1) {
         requestAnimationFrame(tick);
       } else if (flashThenIdle) {
-        setTimeout(() => this.setEdgeColor(edgeId, COLORS.edgeIdle, { emissive: 0.15, duration: 400 }), 260);
+        setTimeout(() => this.setEdgeColor(edgeId, COLORS.edgeIdle, { emissive: 0, duration: 400 }), 260);
       }
     };
     requestAnimationFrame(tick);

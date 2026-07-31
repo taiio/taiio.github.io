@@ -10,6 +10,7 @@ const ITEMS = [
   { color: "rgba(180, 92, 255, 0.7)", label: "Shortest path" },
 ];
 
+
 export default function LegendPanel() {
   return (
     <div className="hud" id="legend">

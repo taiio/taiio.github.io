@@ -10,7 +10,7 @@ export class AnimationController {
    * @param {(patch: object) => void} options.onUpdate - called with partial state whenever something changes
    * @param {string} options.initialAlgorithm - "random" | "dijkstra" | "astar" | "bfs" | "dfs" | "bellmanford"
    */
-  constructor(sceneManager, { onUpdate = () => {}, initialAlgorithm = "random" } = {}) {
+  constructor(sceneManager, { onUpdate = () => {}, initialAlgorithm = "random", initialSpeed = 1 } = {}) {
     this.sm = sceneManager;
     this.pathRenderer = new PathRenderer(sceneManager);
     this.onUpdate = onUpdate;
@@ -19,6 +19,7 @@ export class AnimationController {
     this.stopped = false;
     this.interrupt = null; // null | "newGraph" | "sameGraph"
     this.selectedAlgorithm = initialAlgorithm;
+    this.speedMultiplier = initialSpeed;
     this.currentStartId = null;
     this.currentEndId = null;
 
@@ -51,6 +52,11 @@ export class AnimationController {
     this.interrupt = "sameGraph"; // re-run the chosen algorithm on the current graph immediately
   }
 
+  setSpeed(multiplier) {
+    this.speedMultiplier = multiplier;
+    this.onUpdate({ speed: multiplier });
+  }
+
   stop() {
     this.stopped = true;
     this.interrupt = "newGraph";
@@ -61,9 +67,10 @@ export class AnimationController {
    * ------------------------------------------------------------------ */
 
   async _waitStep(ms) {
+    const scaledMs = ms / this.speedMultiplier;
     let elapsed = 0;
     const tick = 60;
-    while (elapsed < ms) {
+    while (elapsed < scaledMs) {
       if (this.interrupt) return;
       if (!this.paused) elapsed += tick;
       await wait(tick);
@@ -224,11 +231,12 @@ export class AnimationController {
           }
 
           else if (step.type === "relax") {
+            const fromSource = step.from === this.currentStartId;
             this.onUpdate({
               stats: { step: `Relaxing edge N${step.from}→N${step.to}`, queueSize: step.queueSize },
             });
             this.sm.revealEdge(step.edgeId, { targetOpacity: 0.85, duration: 300 });
-            this.sm.setEdgeColor(step.edgeId, COLORS.edgeRelaxing, { emissive: 0.6, duration: 220 });
+            this.sm.setEdgeColor(step.edgeId, fromSource ? COLORS.nodeSource : COLORS.edgeRelaxing, { emissive: 0.6, duration: 220 });
             this.sm.spawnTraveler(step.from, step.to, 0xfff2b0, 380);
             this.sm.setNodeColor(step.to, this._nodeColorFor(step.to, COLORS.nodeQueued), { emissive: 0.5, duration: 220, scale: 1.25 });
 
@@ -238,10 +246,14 @@ export class AnimationController {
             await this._waitStep(stepMs * 0.55);
 
             if (step.improved) {
-              this._treeAddEdge(step.from, step.to);
+              if (step.side !== "backward") this._treeAddEdge(step.from, step.to);
               this.sm.setEdgeColor(step.edgeId, COLORS.edgeImproved, { emissive: 0.65, duration: 260 });
               this.sm.setNodeColor(step.to, this._nodeColorFor(step.to, COLORS.nodeQueued), { emissive: 0.55, duration: 260, scale: 1.3 });
               this.sm.spawnBurst(step.to, COLORS.edgeImproved, 10);
+            } else if (fromSource) {
+              // still a genuine branch leaving the start node — keep it green
+              // rather than flashing red, so the start's directions stay legible
+              this.sm.setEdgeColor(step.edgeId, COLORS.nodeSource, { emissive: 0.5, duration: 260 });
             } else {
               this.sm.setEdgeColor(step.edgeId, COLORS.edgeRejected, { emissive: 0.55, duration: 180, flashThenIdle: true });
             }

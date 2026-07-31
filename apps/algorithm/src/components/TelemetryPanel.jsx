@@ -4,8 +4,10 @@ const ALGORITHM_OPTIONS = [
   { value: "random", label: "Random each cycle" },
   { value: "dijkstra", label: "Dijkstra" },
   { value: "astar", label: "A*" },
+  { value: "greedy", label: "Greedy Best-First" },
   { value: "bfs", label: "BFS (breadth-first)" },
   { value: "dfs", label: "DFS (depth-first)" },
+  { value: "bidirectional", label: "Bidirectional BFS" },
   { value: "bellmanford", label: "Bellman-Ford" },
 ];
 
@@ -16,9 +18,11 @@ export default function TelemetryPanel({
   frontier,
   paused,
   algorithm,
+  speed,
   onTogglePause,
   onRegenerate,
   onAlgorithmChange,
+  onSpeedChange,
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -102,6 +106,21 @@ export default function TelemetryPanel({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div id="speedPicker">
+            <label htmlFor="speedSlider">
+              Speed <span className="speed-value">{speed.toFixed(2)}×</span>
+            </label>
+            <input
+              id="speedSlider"
+              type="range"
+              min="0.25"
+              max="4"
+              step="0.25"
+              value={speed}
+              onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
+            />
           </div>
 
           <div id="controls">

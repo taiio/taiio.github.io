@@ -38,6 +38,7 @@ export default function App() {
   const [loadingHiding, setLoadingHiding] = useState(false);
   const [state, setState] = useState(INITIAL_STATE);
   const [algorithm, setAlgorithmState] = useState("random");
+  const [speed, setSpeedState] = useState(1);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -45,6 +46,7 @@ export default function App() {
 
     const controller = new AnimationController(sceneManager, {
       initialAlgorithm: algorithm,
+      initialSpeed: speed,
       onUpdate: (patch) => {
         setState((prev) => ({
           ...prev,
@@ -86,6 +88,10 @@ export default function App() {
     setAlgorithmState(key);
     controllerRef.current?.setAlgorithm(key);
   }, []);
+  const handleSpeedChange = useCallback((value) => {
+    setSpeedState(value);
+    controllerRef.current?.setSpeed(value);
+  }, []);
 
   return (
     <>
@@ -100,9 +106,11 @@ export default function App() {
         frontier={state.frontier}
         paused={state.paused}
         algorithm={algorithm}
+        speed={speed}
         onTogglePause={handleTogglePause}
         onRegenerate={handleRegenerate}
         onAlgorithmChange={handleAlgorithmChange}
+        onSpeedChange={handleSpeedChange}
       />
       <LegendPanel />
       <TreePanel tree={state.tree} />

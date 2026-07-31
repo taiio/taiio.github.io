@@ -1,5 +1,3 @@
-import * as THREE from "three";
-
 /* Color palette — matches the legend shown in the HUD */
 export const COLORS = {
   nodeUnvisited: 0xfcfafa,
@@ -10,7 +8,7 @@ export const COLORS = {
   nodeTarget: 0xff0055,
   nodePath: 0xd946ef,
 
-  edgeIdle: 0x334155,
+  edgeIdle: 0x4f4f4f,
   edgeRelaxing: 0xffff00,
   edgeImproved: 0x00ff88,
   edgeRejected: 0xff0055,
@@ -23,9 +21,3 @@ export const clamp01 = (t) => Math.max(0, Math.min(1, t));
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const rand = (a, b) => a + Math.random() * (b - a);
 export const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-export function hexLerp(hexA, hexB, t) {
-  const a = new THREE.Color(hexA);
-  const b = new THREE.Color(hexB);
-  return a.lerp(b, clamp01(t));
-}

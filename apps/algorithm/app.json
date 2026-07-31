@@ -1,6 +1,6 @@
 {
   "name": "Algorithms Visualizer",
-  "slug": "algorithsm",
+  "slug": "algorithm",
   "description": "Interactive visualizations for algorithmic concepts.",
   "tags": ["Algorithms", "React", "Visualization"],
   "featured": true,
