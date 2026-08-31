@@ -1,0 +1,10 @@
+{
+  "name": "Code notebook",
+  "slug": "code-notebook",
+  "description": "A simple code notebook for writing and executing code snippets.",
+  "tags": ["Development", "Notebook", "Code"],
+  "featured": true,
+  "priority": 1,
+  "icon": "icon.png",
+  "status": "live"
+}
