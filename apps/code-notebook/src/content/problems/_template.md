@@ -9,9 +9,10 @@ url: https://link-to-original-problem
 ---
 
 ## Problem
-Paste problem description here. Supports full Markdown: **bold**, `code`, ```block```, lists...
+Paste problem description here. Supports full Markdown: **bold**, `code`, ```block```, lists... and provide examples:...
 
 ## Hints
+- You need provide full hint for the website provide.
 - Hint 1 (remove the entire "## Hints" section if hints are not needed)
 - Hint 2
 
@@ -20,6 +21,8 @@ Paste problem description here. Supports full Markdown: **bold**, `code`, ```blo
 TypeScript is prioritized — place ```typescript fence first.)
 
 ```typescript
+// just init the function name and paramaters. dont remove!.
+
 function solve(): void {
   // TODO
 }
@@ -63,6 +66,8 @@ Explain the general intuition of this approach.
 - Step 2
 
 ```typescript
+// Ok. you can provide full solution here. please init, explain if the function depent on Class or other function likes: BST, Linkedin list,...
+// Please format /newline and /tab to easy read the code
 // TypeScript solution code here
 ```
 
